@@ -19,10 +19,9 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
   public function __construct(&$formValues) {
     $this->_formValues = $formValues;
     $this->_columns = array(
-      ts('Contact ID') => 'contact_id',
-      ts('Contact Type') => 'contact_type',
       ts('Name') => 'sort_name',
-      ts('Group Name') => 'gname',
+      ts('Email') => 'email',
+      ts('Language') => 'language',
     );
 
     $this->_includeGroupsA = CRM_Utils_Array::value('includeGroupsA', $this->_formValues, array());
@@ -110,8 +109,8 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
       $selectClause = "contact_a.id as contact_id";
     }
     else {
-      $selectClause = "contact_a.id as contact_id,
-                         contact_a.contact_type as contact_type,
+      $selectClause = "  email, 
+                         contact_a.preferred_language as language,
                          contact_a.sort_name    as sort_name";
 
     }
@@ -146,7 +145,7 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
         }
       }
       else {
-        $sql .= " ORDER BY contact_id ASC";
+        $sql .= " ORDER BY contact_a.id ASC";
       }
     }
     else {
@@ -156,7 +155,6 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
     if ($offset >= 0 && $rowcount > 0) {
       $sql .= " LIMIT $offset, $rowcount ";
     }
-
     return $sql;
   }
 
@@ -181,7 +179,7 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
       }
 
 
-      if (true ==="XAV" && $xGroups != 0) {
+      if (true ==="XAV" && $xGroups != 0) { // should be rebuild the smart groups?
         //search for smart group contacts
         foreach ($this->_includeGroupsB as $keys => $values) {
           if (in_array($values, $smartGroup)) {
@@ -198,7 +196,13 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
       }
 
 
-   $from ="FROM civicrm_contact contact_a join civicrm_group_contact cg1 on contact_a.id=cg1.id join civicrm_group_contact cg2 on cg1.group_id in ($xGroups) and cg2.group_id in ($iGroups) and cg1.contact_id=cg2.contact_id";
+   $from ="FROM civicrm_contact contact_a ";
+    if ($xGroups)
+      $from .= " join (select contact_id from civicrm_group_contact where Status='Added' and group_id in ($xGroups) UNION 
+					 select contact_id from civicrm_group_contact_cache where group_id in ($xGroups)) cg1 on cg1.contact_id=contact_a.id";
+    if ($iGroups)
+      $from .= " join (select contact_id from civicrm_group_contact where Status='Added' and group_id in ($iGroups) UNION 
+					 select contact_id from civicrm_group_contact_cache where group_id in ($iGroups)) cg2 on cg2.contact_id=contact_a.id";
 
     $from .= " LEFT JOIN civicrm_email ON ( contact_a.id = civicrm_email.contact_id AND ( civicrm_email.is_primary = 1 OR civicrm_email.is_bulkmail = 1 ) ) {$this->_aclFrom}";
 
