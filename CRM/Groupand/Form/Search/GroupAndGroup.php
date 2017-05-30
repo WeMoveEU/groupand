@@ -157,7 +157,6 @@ class CRM_Groupand_Form_Search_GroupAndGroup extends CRM_Contact_Form_Search_Cus
       $sql .= " LIMIT $offset, $rowcount ";
     }
 
-die ($sql);
     return $sql;
   }
 
@@ -199,7 +198,7 @@ die ($sql);
       }
 
 
-   $from ="civicrm_group_contact cg1 join civicrm_group_contact cg2 where cg1.group_id in ($xGroups) and cg2.group_id in ($iGroups) and cg1.contact_id=cg2.contact_id";
+   $from ="FROM civicrm_contact contact_a join civicrm_group_contact cg1 on contact_a.id=cg1.id join civicrm_group_contact cg2 on cg1.group_id in ($xGroups) and cg2.group_id in ($iGroups) and cg1.contact_id=cg2.contact_id";
 
     $from .= " LEFT JOIN civicrm_email ON ( contact_a.id = civicrm_email.contact_id AND ( civicrm_email.is_primary = 1 OR civicrm_email.is_bulkmail = 1 ) ) {$this->_aclFrom}";
 
@@ -211,7 +210,6 @@ die ($sql);
     // CRM-11627
     $this->_where .= " AND (contact_a.is_deleted != 1) ";
 
-die ($from);
     return $from;
   }
 
